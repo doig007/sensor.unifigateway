@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
     try:
-        ctrl = Controller(host, username, password, port, version='v4',
+        ctrl = Controller(host, username, password, port, version='unifiOS',
                           site_id=site_id, ssl_verify=verify_ssl)
     except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi Security Gateway: %s", ex)
