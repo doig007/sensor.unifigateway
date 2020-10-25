@@ -70,7 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Unifi sensor."""
-    from pyunifi.controller import Controller, APIError
+    from controller import Controller, APIError
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -127,7 +127,7 @@ class UnifiGatewaySensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Set up the sensor."""
-        from pyunifi.controller import APIError
+        from controller import APIError
 
         if self._sensor == SENSOR_ALERTS:
           try:
