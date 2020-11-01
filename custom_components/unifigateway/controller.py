@@ -75,8 +75,9 @@ class Controller(object):
             self.password = password
             self.site_id = site_id
             self.ssl_verify = ssl_verify
-            self.url = 'https://' + host + '/proxy/network/'
-
+#           self.url = 'https://' + host + '/proxy/network/'
+            self.url = 'https://' + host + '/proxy/network/api/s/default/stat/device'
+  
             if ssl_verify is False:
                 warnings.simplefilter("default", category=requests.packages.
                                       urllib3.exceptions.
