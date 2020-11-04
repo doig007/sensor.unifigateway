@@ -129,49 +129,20 @@ class UnifiGatewaySensor(Entity):
         """Set up the sensor."""
         from .controller import APIError
 
-        if self._sensor == SENSOR_ALERTS:
-          try:
-              unarchived_alerts = self._ctrl.get_alerts()
-          except APIError as ex:
-              _LOGGER.error("Failed to access alerts info: %s", ex)
+        # get_healthinfo() call made for each of 4 sensors - should only be for 1
+        try:
+            # Check that function exists...potential errors on startup otherwise
+            if hasattr(self._ctrl,'get_healthinfo'):
+                self._alldata = self._ctrl.get_healthinfo()
 
-          self._attributes = {}
-          for index, alert in enumerate(unarchived_alerts,start=1):
-            if not alert['archived']:
-              self._attributes[str(index)] = alert
+                for sub in self._alldata:
+                    if sub['subsystem'] == self._sensor:
+                        self._data = sub
+                        self._state = sub['status'].upper()
+                        for attr in sub:
+                            self._attributes[attr] = sub[attr]
 
-          self._state = len(self._attributes)
-
-        elif self._sensor == SENSOR_FIRMWARE:
-          try:
-            aps = self._ctrl.get_aps()
-          except APIError as ex:
-            _LOGGER.error("Failed to scan aps: %s", ex)
-
-          # Set the attributes based on device name - this may not be unique
-          # but is user-readability preferred
-          self._attributes = {}
-          self._state = 0
-          for devices in aps:
-            if devices.get('upgradable'):
-                self._attributes[devices['name']] = devices['upgradable']
-                self._state += 1
-
-        else:
-          # get_healthinfo() call made for each of 4 sensors - should only be for 1
-          try:
-              # Check that function exists...potential errors on startup otherwise
-              if hasattr(self._ctrl,'get_healthinfo'):
-                  self._alldata = self._ctrl.get_healthinfo()
-
-                  for sub in self._alldata:
-                      if sub['subsystem'] == self._sensor:
-                          self._data = sub
-                          self._state = sub['status'].upper()
-                          for attr in sub:
-                              self._attributes[attr] = sub[attr]
-
-              else:
+            else:
                   _LOGGER.error("no healthinfo attribute for controller")
-          except APIError as ex:
+        except APIError as ex:
               _LOGGER.error("Failed to access health info: %s", ex)
