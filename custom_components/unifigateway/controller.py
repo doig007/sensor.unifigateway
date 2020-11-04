@@ -69,7 +69,7 @@ class Controller(object):
         self.password = password
         self.site_id = site_id
         self.ssl_verify = ssl_verify
-        self.url = 'http://' + host + '/proxy/network/'
+        self.url = 'https://' + host + '/proxy/network/'
   
         if ssl_verify is False:
             warnings.simplefilter("default", category=urllib3.exceptions.InsecureRequestWarning)
