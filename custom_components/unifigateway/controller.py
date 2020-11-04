@@ -1,15 +1,14 @@
+"""Source: https://github.com/finish06/pyunifi/blob/master/pyunifi/controller.py
+Modified for testing purposes after upgrade to v6 of UnifiOS"""
 import json
 import logging
 import requests
+import urllib3
 import shutil
 import time
 import warnings
 
 
-"""For testing purposes:
-logging.basicConfig(filename='pyunifi.log', level=logging.WARN,
-                    format='%(asctime)s %(message)s')
-"""
 log = logging.getLogger(__name__)
 
 
@@ -48,14 +47,10 @@ class Controller(object):
     >>> for ap in c.get_aps():
     ...     print 'AP named %s with MAC %s' % (ap.get('name'), ap['mac'])
     ...
-    AP named Study with MAC dc:9f:db:1a:59:07
-    AP named Living Room with MAC dc:9f:db:1a:59:08
-    AP named Garage with MAC dc:9f:db:1a:59:0b
-
     """
 
     def __init__(self, host, username, password, port=8443,
-                 version='v5', site_id='default', ssl_verify=True):
+                 version='unifiOS', site_id='default', ssl_verify=True):
         """
         :param host: the address of the controller host; IP or name
         :param username: the username to log in with
@@ -69,49 +64,22 @@ class Controller(object):
 
         self.log = logging.getLogger(__name__ + ".Controller")
 
-        if version == "unifiOS":
-            self.host = host
-            self.username = username
-            self.password = password
-            self.site_id = site_id
-            self.ssl_verify = ssl_verify
-            self.url = 'https://' + host + '/proxy/network/'
-#            self.url = 'https://' + host + '/proxy/network/api/s/default/stat/device'
+        self.host = host
+        self.username = username
+        self.password = password
+        self.site_id = site_id
+        self.ssl_verify = ssl_verify
+        self.url = 'http://' + host + '/proxy/network/'
   
-            if ssl_verify is False:
-                warnings.simplefilter("default", category=requests.packages.
-                                      urllib3.exceptions.
-                                      InsecureRequestWarning)
+        if ssl_verify is False:
+            warnings.simplefilter("default", category=urllib3.exceptions.InsecureRequestWarning)
 
-            self.session = requests.Session()
-            self.session.verify = ssl_verify
+        self.session = requests.Session()
+        self.session.verify = ssl_verify
 
-            self.log.debug('Controller for %s', self.url)
-            self._login()
+        self.log.debug('Controller for %s', self.url)
+        self._login()
 
-        elif version[:1] == 'v':
-            # if float(version[1:]) < 4:
-            #    raise APIError("%s controllers no longer supported" % version)
-
-            self.host = host
-            self.port = port
-            self.version = version
-            self.username = username
-            self.password = password
-            self.site_id = site_id
-            self.url = 'https://' + host + ':' + str(port) + '/'
-            self.ssl_verify = ssl_verify
-
-            if ssl_verify is False:
-                warnings.simplefilter("default", category=requests.packages.
-                                      urllib3.exceptions.
-                                      InsecureRequestWarning)
-
-            self.session = requests.Session()
-            self.session.verify = ssl_verify
-
-            self.log.debug('Controller for %s', self.url)
-            self._login()
 
     @staticmethod
     def _jsondec(data):
@@ -155,7 +123,6 @@ class Controller(object):
     def _login(self):
         log.debug('login() as %s', self.username)
 
-        # XXX Why doesn't passing in the dict work?
         params = {'username': self.username, 'password': self.password}
         login_url = self.url + 'api/login'
 
