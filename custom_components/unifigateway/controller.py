@@ -3,14 +3,12 @@ Modified for testing purposes after upgrade to v6 of UnifiOS"""
 import json
 import logging
 import requests
-import urllib3
 import shutil
 import time
 import warnings
 
 
 log = logging.getLogger(__name__)
-
 
 class APIError(Exception):
     pass
@@ -19,17 +17,9 @@ class APIError(Exception):
 def retry_login(func, *args, **kwargs):
     """To reattempt login if requests exception(s) occur at time of call"""
     def wrapper(*args, **kwargs):
-        try:
-            try:
-                return func(*args, **kwargs)
-            except (requests.exceptions.RequestException,
-                    APIError) as err:
-                log.warning("Failed to perform %s due to %s" % (func, err))
-                controller = args[0]
-                controller._login()
-                return func(*args, **kwargs)
-        except Exception as err:
-            raise APIError(err)
+        log.warning("Failed to perform ...")
+        controller = args[0]
+        controller._login()
     return wrapper
 
 
@@ -42,9 +32,10 @@ class Controller(object):
         self.host = host
         self.username = username
         self.password = password
+        self.port = port
         self.site_id = site_id
         self.ssl_verify = ssl_verify
-        self.url = 'http://' + host + '/proxy/network/'
+        self.url = 'https://' + host + '/proxy/network/'
   
         self.session = requests.Session()
         self.session.verify = ssl_verify
@@ -69,7 +60,6 @@ class Controller(object):
 
     @retry_login
     def _read(self, url, params=None):
-        # Try block to handle the unifi server being offline.
         r = self.session.get(url, params=params)
         return self._jsondec(r.text)
 
@@ -96,9 +86,10 @@ class Controller(object):
         log.debug('login() as %s', self.username)
 
         params = {'username': self.username, 'password': self.password}
-        login_url = self.url + 'api/login'
+        login_url = 'https://' + self.host + '/api/auth/login'
 
         r = self.session.post(login_url, json=params)
+
         if r.status_code != 200:
             raise APIError("Login failed - status code: %i" % r.status_code)
 
@@ -108,4 +99,5 @@ class Controller(object):
 
     def get_healthinfo(self):
         """Return health information."""
+        log.debug('reading health info...')
         return self._api_read('stat/health')
