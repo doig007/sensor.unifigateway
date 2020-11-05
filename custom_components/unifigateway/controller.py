@@ -64,7 +64,8 @@ class Controller(object):
         return self._jsondec(r.text)
 
     def _api_read(self, url, params=None):
-        return self._read(self._api_url() + url, params)
+        r = self.session.get(self._api_url() + url, params=params)
+        return self._jsondec(r.text)
 
     @retry_login
     def _write(self, url, params=None):
